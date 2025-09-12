@@ -9,28 +9,41 @@ from .auth_utils import verify_webapp_init_data, create_jwt
 from .models import UserProfile, GameSession, Purchase, MiningAsset, UserAsset
 from .serializers import ProfileSerializer, SessionSerializer, PurchaseSerializer, AssetSerializer, UserAssetSerializer
 
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import AllowAny
+
 # ======= AUTH =======
+@csrf_exempt
 @api_view(["POST"])
+@permission_classes([AllowAny])
+@authentication_classes([])  # без SessionAuth/CSRF
 def auth_telegram_webapp(request):
     init_data = request.data.get("initData")
     if not init_data:
         return Response({"error": "initData required"}, status=400)
     try:
         params = verify_webapp_init_data(init_data)
-    except ValueError:
-        return Response({"error": "Bad signature"}, status=401)
+    except ValueError as e:
+        return Response({"error": f"Bad signature: {e}"}, status=401)
 
-    import json
     user_json = params.get("user")
     if not user_json:
         return Response({"error": "No user"}, status=400)
-    user = json.loads(user_json)
+
+    try:
+        user = json.loads(user_json)  # в initData поле user — это JSON-строка
+    except json.JSONDecodeError:
+        return Response({"error": "user parse error"}, status=400)
+
     tg_id = int(user["id"])
     username = user.get("username")
     display_name = (user.get("first_name", "") + " " + user.get("last_name", "")).strip() or username
 
-    profile, _ = UserProfile.objects.get_or_create(tg_id=tg_id, defaults={"username": username, "display_name": display_name})
-    # заполнить код реферала
+    profile, _ = UserProfile.objects.get_or_create(
+        tg_id=tg_id,
+        defaults={"username": username, "display_name": display_name}
+    )
     profile.ensure_referral_code()
     if username and profile.username != username:
         profile.username = username
@@ -38,7 +51,7 @@ def auth_telegram_webapp(request):
         profile.display_name = display_name
     profile.save()
 
-    token = create_jwt({"sub": str(tg_id), "username": username})
+    token = create_jwt({"sub": str(tg_id), "username": username or ""})
     return Response({"jwt": token, "profile": ProfileSerializer(profile).data})
 
 # ======= PROFILE =======
@@ -194,3 +207,5 @@ def exchange(request):
     p.balance += amount // 10  # условный курс 10:1 во внутреннюю валюту
     p.save()
     return Response({"ok": True, "profile": ProfileSerializer(p).data})
+
+
