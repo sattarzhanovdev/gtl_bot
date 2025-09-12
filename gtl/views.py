@@ -121,12 +121,55 @@ def game_finish(request, session_id: int):
 
 # ======= SHOP =======
 SHOP_ITEMS = [
-    {"key": "pickaxe_1", "title": "Кирка 1 (базовая)", "price": 10, "grants_starter": True},
-    {"key": "pickaxe_2", "title": "Кирка 2 (мощная)", "price": 100, "grants_starter": True},
-    {"key": "dynamite_1", "title": "Динамит 1", "price": 50, "grants_starter": True},
-    {"key": "dynamite_2", "title": "Динамит 2", "price": 80, "grants_starter": True},
-    {"key": "golden_foot", "title": "Золотой отпечаток (магнит)", "price": 120, "grants_starter": True},
-    {"key": "boot_basic", "title": "Ботинки базовые", "price": 40, "grants_starter": False},
+    {
+        "key": "pickaxe_1",
+        "title": "Кирка 1 (базовая)",
+        "price": 10,
+        "grants_starter": True,
+        "image": "/static/images/kirka1.png"
+    },
+    {
+        "key": "pickaxe_2",
+        "title": "Кирка 2 (мощная)",
+        "price": 100,
+        "grants_starter": True,
+        "image": "/static/images/kirka2.png"
+    },
+    {
+        "key": "dynamite_1",
+        "title": "Динамит 1",
+        "price": 50,
+        "grants_starter": True,
+        "image": "/static/images/dinamit1.png"
+    },
+    {
+        "key": "dynamite_2",
+        "title": "Динамит 2",
+        "price": 80,
+        "grants_starter": True,
+        "image": "/static/images/dinamit2.png"
+    },
+    {
+        "key": "golden_foot",
+        "title": "Золотой отпечаток (магнит)",
+        "price": 120,
+        "grants_starter": True,
+        "image": "/static/images/magnitnye botinki.png"
+    },
+    # {
+    #     "key": "boot_basic",
+    #     "title": "Ботинки базовые",
+    #     "price": 40,
+    #     "grants_starter": False,
+    #     "image": "/static/images/boot_basic.png"
+    # },
+    {
+        "key": "magnit_boots",
+        "title": "Магнитный отпечаток",
+        "price": 40,
+        "grants_starter": False,
+        "image": "/static/images/magnit_boot.png"
+    },
 ]
 
 @api_view(["GET"])

@@ -85,6 +85,35 @@
     /* helpers */
     .hide{display:none}
     .muted{color:var(--muted)}
+
+    .game-layer{position:fixed;inset:0;display:none;z-index:50;background:#000}
+.game-layer.active{display:block}
+.game-bg{
+  position:absolute;inset:0;
+  background:url('https://images.unsplash.com/photo-1618172193763-39e4d94dfd4b?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
+  filter:saturate(1.1) contrast(1.05);
+}
+.game-mask{position:absolute;inset:0;background:radial-gradient(120% 120% at 50% 30%, #0000 0%, #0006 65%, #000a 100%);}
+.hud{
+  position:absolute;left:0;right:0;top:8px;display:flex;justify-content:space-between;
+  padding:12px 18px;font-family:"Chakra Petch", monospace;font-weight:800;font-size:30px;color:#e9ecff;mix-blend:screen
+}
+.hud .shadow{text-shadow:0 4px 24px #000, 0 0 0 #000}
+.stones{position:absolute;inset:0;overflow:hidden}
+.stone{
+  position:absolute;width:72px;height:72px;border-radius:18px;display:grid;place-items:center;
+  background: radial-gradient(#1d2338,#0d0f1a); box-shadow:0 0 0 2px #00ffd055, 0 0 22px #00ffd033;
+  user-select:none; -webkit-user-select:none; touch-action:manipulation; cursor:pointer;
+}
+.stone img{width:72px;height:72px;object-fit:cover;border-radius:18px;opacity:.95;mix-blend:screen}
+.score-pop{
+  position:absolute; color:#fff; font-family:"Chakra Petch"; font-weight:800;
+  text-shadow:0 4px 12px #000; pointer-events:none
+}
+.game-close{
+  position:absolute;right:12px;top:12px;background:#0008;border:2px solid #ffffff33;color:#fff;
+  border-radius:14px;padding:6px 10px;font-weight:700
+}
   </style>
 </head>
 <body>
@@ -122,6 +151,18 @@
         <button class="play" id="playBtn">Play</button>
       </div>
     </div>
+
+    <!-- GAME OVERLAY -->
+<div id="game" class="game-layer">
+  <div class="game-bg"></div>
+  <div class="game-mask"></div>
+  <div class="hud">
+    <div id="hudScore" class="shadow">Score: 0 GTL</div>
+    <div id="hudTime"  class="shadow">Time: 10s</div>
+  </div>
+  <div class="stones" id="stones"></div>
+  <button class="game-close" id="gameClose">✕</button>
+</div>
 
     <!-- SHOP -->
     <div class="section shop">
@@ -229,33 +270,181 @@
     }).then(async r=>{ if(!r.ok) throw new Error(await r.text()); return r.json(); });
   }
 
+async function auth(){
+  PROFILE = { username: "Demo", level: 3, total_gtl: 777, has_starter_pack: true };
+  paintHeader();
+}
 
-    
-  async function auth(){
-    try {
-      if (!tg.initData) {
-        throw new Error("initData is empty. Открой через Telegram web_app кнопку");
-      }
-      const r = await fetch("/api/auth/telegram-webapp", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ initData: tg.initData })
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || r.statusText);
+// ---------- GAME ----------
+const GAME_CFG = {
+  duration: 10,              // секунд
+  spawnEveryMs: 700,         // как часто спавним камни
+  fallSpeedMin: 60,          // px/сек
+  fallSpeedMax: 120,
+  stoneImages: [
+    "/static/images/gem_green.png",
+    "/static/images/gem_red.png",
+    "/static/images/gem_blue.png",
+    "/static/images/gem_gold.png"
+  ]
+};
 
-      // Сохраняем токен и профиль
-      JWT = data.jwt;
-      PROFILE = data.profile;
-      localStorage.setItem("jwt", JWT);
-      localStorage.setItem("profile", JSON.stringify(PROFILE));
+let G = {running:false, tLeft:0, score:0, lastSpawn:0, stones:[], raf:0};
 
-      paintHeader();
-    } catch (e) {
-      console.error("Auth error:", e);
-      alert("Auth error: " + e.message);
-    }
+function showGame(onFinish){
+  const el = document.getElementById('game');
+  el.classList.add('active');
+  G = {running:true, tLeft:GAME_CFG.duration, score:0, lastSpawn:0, stones:[], onFinish, raf:0};
+  document.getElementById('hudScore').textContent = `Score: 0 GTL`;
+  document.getElementById('hudTime').textContent  = `Time: ${G.tLeft}s`;
+  document.getElementById('stones').innerHTML = '';
+  loop(0);
+}
+
+function hideGame(){
+  document.getElementById('game').classList.remove('active');
+  cancelAnimationFrame(G.raf);
+  G.running = false;
+}
+
+document.getElementById('gameClose').onclick = ()=>{ endGame(); };
+
+function spawnStone(){
+  const area = document.getElementById('stones');
+  const w = area.clientWidth, h = area.clientHeight;
+  const x = Math.random()*(w-80)+4;
+  const speed = GAME_CFG.fallSpeedMin + Math.random()*(GAME_CFG.fallSpeedMax-GAME_CFG.fallSpeedMin);
+  const val = [1,2,5,10][Math.floor(Math.random()*4)];
+  const img = GAME_CFG.stoneImages[Math.floor(Math.random()*GAME_CFG.stoneImages.length)];
+
+  const s = document.createElement('div');
+  s.className = 'stone';
+  s.style.left = `${x}px`; s.style.top = `-80px`;
+  s.dataset.v = val;
+  s.dataset.y = -80;
+  s.dataset.speed = speed;
+  s.innerHTML = `<img src="${img}" alt="stone">`;
+  s.onclick = (e)=> collectStone(e.currentTarget);
+  area.appendChild(s);
+  G.stones.push(s);
+}
+
+function collectStone(s){
+  const v = Number(s.dataset.v||1);
+  G.score += v;
+  document.getElementById('hudScore').textContent = `Score: ${G.score} GTL`;
+
+  // поп-ап очков
+  const pop = document.createElement('div');
+  pop.className = 'score-pop';
+  pop.textContent = `+${v}`;
+  const rect = s.getBoundingClientRect();
+  pop.style.left = (rect.left+rect.width/2 - 10)+'px';
+  pop.style.top  = (rect.top - 10)+'px';
+  document.body.appendChild(pop);
+  animatePop(pop);
+
+  s.remove();
+  G.stones = G.stones.filter(x=>x!==s);
+}
+
+function animatePop(el){
+  const start = performance.now();
+  function f(t){
+    const dt = (t-start)/600;
+    el.style.transform = `translateY(${-40*dt}px)`;
+    el.style.opacity = String(1-dt);
+    if(dt<1) requestAnimationFrame(f); else el.remove();
   }
+  requestAnimationFrame(f);
+}
+
+function loop(ts){
+  if(!G.running) return;
+  if(!G.start) G.start = ts;
+  const dt = (ts - (G.prev || ts))/1000;
+  G.prev = ts;
+
+  // таймер
+  G.tLeft = Math.max(0, G.tLeft - dt);
+  document.getElementById('hudTime').textContent = `Time: ${Math.ceil(G.tLeft)}s`;
+  if (G.tLeft <= 0) { endGame(); return; }
+
+  // спавн
+  G.lastSpawn += dt*1000;
+  if (G.lastSpawn >= GAME_CFG.spawnEveryMs) {
+    G.lastSpawn = 0;
+    spawnStone();
+  }
+
+  // падение
+  const area = document.getElementById('stones');
+  const h = area.clientHeight;
+  G.stones.forEach(s=>{
+    const y = Number(s.dataset.y) + Number(s.dataset.speed)*dt;
+    s.dataset.y = y;
+    s.style.top = `${y}px`;
+    if (y > h) { s.remove(); }
+  });
+  G.stones = G.stones.filter(s=>s.isConnected);
+
+  G.raf = requestAnimationFrame(loop);
+}
+
+async function endGame(){
+  if(!G.running) return;
+  G.running = false;
+  hideGame();
+  const earned = G.score;
+
+  // если есть JWT — отправим на сервер; иначе просто алерт
+  try{
+    if (JWT){
+      // пример payload; подставь свою схему
+      const payload = { total_gtl: earned, minerals: {C:earned%5, Fe:earned%3}, clicks_per_sec: 10 };
+      await api('/game/finish/last','POST',{payload}); // или твой `/game/finish/${SESSION.id}`
+      PROFILE = await api('/me'); paintHeader(); loadPeriodic();
+    }
+  }catch(_){/* молчим в демо */}
+
+  alert(`Insane! You earned ${earned} GTL`);
+}
+    
+  // async function auth(){
+  //   try {
+  //     if (!tg.initData) {
+  //       console.warn("Нет initData → включаем guest-режим");
+  //       JWT = null;
+  //       PROFILE = {
+  //         username: "Guest",
+  //         display_name: "Guest Player",
+  //         level: 1,
+  //         total_gtl: 0,
+  //         has_starter_pack: false
+  //       };
+  //       paintHeader();
+  //       return;
+  //     }
+  //     const r = await fetch("/api/auth/telegram-webapp", {
+  //       method: "POST",
+  //       headers: {"Content-Type":"application/json"},
+  //       body: JSON.stringify({ initData: tg.initData })
+  //     });
+  //     const data = await r.json();
+  //     if (!r.ok) throw new Error(data.error || r.statusText);
+
+  //     // Сохраняем токен и профиль
+  //     JWT = data.jwt;
+  //     PROFILE = data.profile;
+  //     localStorage.setItem("jwt", JWT);
+  //     localStorage.setItem("profile", JSON.stringify(PROFILE));
+
+  //     paintHeader();
+  //   } catch (e) {
+  //     console.error("Auth error:", e);
+  //     alert("Auth error: " + e.message);
+  //   }
+  // }
 
   function paintHeader(){
     if (!PROFILE) return;
@@ -272,25 +461,32 @@
 
   /* -------- LEVELS / GAME -------- */
   let SESSION=null;
-  $('#playBtn').onclick = async ()=>{
-    const s = await api('/game/start','POST'); SESSION=s;
-    // в прототипе просто имитируем быструю игру и завершение
-    setTimeout(async ()=>{
-      const payload = { total_gtl: 137, minerals: {H:3, He:1, C:4}, clicks_per_sec: 12.3 };
-      await api(`/game/finish/${SESSION.id}`,'POST',{payload});
-      PROFILE = await api('/me'); paintHeader();
-      alert(`Insane! You earned ${payload.total_gtl} GTL`);
-      loadPeriodic();
-    }, Math.min((s.duration_sec||10)*1000, 2500)); // короткая демо-задержка
+  // $('#playBtn').onclick = async ()=>{
+  //   const s = await api('/game/start','POST'); SESSION=s;
+  //   // в прототипе просто имитируем быструю игру и завершение
+  //   setTimeout(async ()=>{
+  //     const payload = { total_gtl: 137, minerals: {H:3, He:1, C:4}, clicks_per_sec: 12.3 };
+  //     await api(`/game/finish/${SESSION.id}`,'POST',{payload});
+  //     PROFILE = await api('/me'); paintHeader();
+  //     alert(`Insane! You earned ${payload.total_gtl} GTL`);
+  //     loadPeriodic();
+  //   }, Math.min((s.duration_sec||10)*1000, 2500)); // короткая демо-задержка
+  // };
+
+
+  $('#playBtn').onclick = ()=>{
+    showGame(endGame); // запустить игру (10 секунд по умолчанию)
   };
 
+
   /* -------- SHOP -------- */
+  
   async function loadShop(){
     const {items} = await api('/shop/items');
     const boost = items.map(i=>`
       <div class="entry" style="margin-bottom:8px">
         <div class="left">
-          <div class="ico">⚡</div>
+          <img class="ico" src="${i.image}" alt="${i.key}"/>
           <div>
             <div style="font-weight:700">${i.title}</div>
             <div class="muted">${i.price} ⟡</div>
