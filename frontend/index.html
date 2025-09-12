@@ -105,8 +105,14 @@
   /* background: radial-gradient(#1d2338,#0d0f1a); box-shadow:0 0 0 2px #00ffd055, 0 0 22px #00ffd033; */
   user-select:none; -webkit-user-select:none; touch-action:manipulation; cursor:pointer;
 }
-.stone img{width:40px;height:40px;object-fit:cover;border-radius:18px;opacity:.95;mix-blend:screen}
-.score-pop{
+.stone img{
+  width:100%;
+  height:100%;
+  object-fit:contain;   /* чтобы влезала без обрезки */
+  opacity:.95;
+  mix-blend:screen;
+  border-radius:18px;
+}.score-pop{
   /* position:absolute; color:#fff; font-family:"Chakra Petch"; font-weight:800;
   text-shadow:0 4px 12px #000; pointer-events:none */
 }
@@ -125,8 +131,8 @@
 
 .footprint {
   position: absolute;
-  width: 80px;
-  height: 48px;
+  width: 86px;
+  height: 58px;
   pointer-events: none;
   transform: translate(-50%, -50%) rotate(0deg);
   animation: footPop 0.4s ease-out forwards;
@@ -344,23 +350,41 @@ function hideGame(){
 }
 
 document.getElementById('gameClose').onclick = ()=>{ endGame(); };
-
 function spawnStone(){
   const area = document.getElementById('stones');
   const w = area.clientWidth, h = area.clientHeight;
-  const x = Math.random()*(w-80)+4;
-  const speed = GAME_CFG.fallSpeedMin + Math.random()*(GAME_CFG.fallSpeedMax-GAME_CFG.fallSpeedMin);
-  const val = [1,2,5,10][Math.floor(Math.random()*4)];
+
+  // базовый размер и множитель (0.7..1.5)
+  const base = 60;                                // базовый px
+  const sizeMul = [0.7, 0.85, 1.0, 1.2, 1.5][Math.floor(Math.random()*5)];
+  const sizePx  = Math.round(base * sizeMul);
+
+  // ограничим X с учётом ширины камня
+  const x = Math.random()*(w - sizePx - 8) + 4;
+
+  // скорость: мелкие падают быстрее, большие медленнее
+  const baseSpeed = GAME_CFG.fallSpeedMin + Math.random()*(GAME_CFG.fallSpeedMax - GAME_CFG.fallSpeedMin);
+  const speed = Math.max(40, baseSpeed * (1.2 - (sizeMul - 1)*0.8)); // лёгкая коррекция
+
+  // ценность: больше размер → больше GTL
+  const baseVal = [1,2,5,10][Math.floor(Math.random()*4)];
+  const val = Math.max(1, Math.round(baseVal * sizeMul));
+
   const img = GAME_CFG.stoneImages[Math.floor(Math.random()*GAME_CFG.stoneImages.length)];
 
   const s = document.createElement('div');
   s.className = 'stone';
-  s.style.left = `${x}px`; s.style.top = `-80px`;
+  s.style.width  = `${sizePx}px`;
+  s.style.height = `${sizePx}px`;
+  s.style.left = `${x}px`;
+  s.style.top  = `-${sizePx + 8}px`;
+
   s.dataset.v = val;
-  s.dataset.y = -80;
+  s.dataset.y = -sizePx - 8;
   s.dataset.speed = speed;
+
   s.innerHTML = `<img src="${img}" alt="stone">`;
-  s.addEventListener('pointerdown', (ev)=> collectStone(ev));  // быстро реагирует и на тач, и на клик
+  s.addEventListener('pointerdown', (ev)=> collectStone(ev));
   area.appendChild(s);
   G.stones.push(s);
 }
