@@ -230,8 +230,12 @@
   }
 
 
-  (async function auth(){
+    
+  async function auth(){
     try {
+      if (!tg.initData) {
+        throw new Error("initData is empty. Открой через Telegram web_app кнопку");
+      }
       const r = await fetch("/api/auth/telegram-webapp", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
@@ -240,25 +244,30 @@
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || r.statusText);
 
-      localStorage.setItem("jwt", data.jwt);
-      // обновление UI
-      document.querySelector("#username").textContent =
-        data.profile.username || data.profile.display_name || "player";
-      document.querySelector("#balance").textContent = (data.profile.total_gtl ?? 0) + " GTL";
-      document.querySelector("#level").textContent = data.profile.level ?? 1;
+      // Сохраняем токен и профиль
+      JWT = data.jwt;
+      PROFILE = data.profile;
+      localStorage.setItem("jwt", JWT);
+      localStorage.setItem("profile", JSON.stringify(PROFILE));
+
+      paintHeader();
     } catch (e) {
+      console.error("Auth error:", e);
       alert("Auth error: " + e.message);
     }
-  })();
+  }
 
   function paintHeader(){
+    if (!PROFILE) return;
     $('#username').textContent = PROFILE.username || PROFILE.display_name || 'player';
-    $('#balance').textContent = (PROFILE.total_gtl.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})) + ' GTL';
+    const total = Number(PROFILE.total_gtl || 0);
+    $('#balance').textContent = total.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}) + ' GTL';
     $('#level').textContent = PROFILE.level || 1;
-    // если нет стартового набора — подсказка
     const playBtn = $('#playBtn');
-    playBtn.disabled = !PROFILE.has_starter_pack && PROFILE.level===1;
-    playBtn.textContent = playBtn.disabled ? 'Buy to Play' : 'Play';
+    if (playBtn){
+      playBtn.disabled = !PROFILE.has_starter_pack && (PROFILE.level||1)===1;
+      playBtn.textContent = playBtn.disabled ? 'Buy to Play' : 'Play';
+    }
   }
 
   /* -------- LEVELS / GAME -------- */
@@ -365,10 +374,23 @@
 
   /* -------- BOOTSTRAP -------- */
   (async()=>{
+    // восстановление (на случай перезагрузки)
+    try{
+      const savedJwt = localStorage.getItem('jwt');
+      const savedProfile = localStorage.getItem('profile');
+      if(savedJwt && savedProfile){
+        JWT = savedJwt; PROFILE = JSON.parse(savedProfile);
+        paintHeader();
+      }
+    }catch(_){}
+
+    // авторизация через Telegram initData
     await auth();
+
+    // теперь можно звать API, токен уже есть
     await loadShop();
     await loadPeriodic();
-    showTab('home'); // стартовая вкладка
+    showTab('home');
   })();
 </script>
 </body>
