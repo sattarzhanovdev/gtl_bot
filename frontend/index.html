@@ -122,6 +122,31 @@
   height: 100%;
   object-fit: cover;
 }
+
+.footprint {
+  position: absolute;
+  width: 80px;
+  height: 48px;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(0deg);
+  animation: footPop 0.4s ease-out forwards;
+  object-fit: contain;
+  z-index: 1000;              /* поверх видео и камней */
+}
+
+/* всплывающие очки */
+.score-pop{
+  position:absolute;
+  color:#fff;
+  font-family:"Chakra Petch";
+  font-weight:800;
+  text-shadow:0 4px 12px #000;
+  pointer-events:none;
+  z-index: 1000;
+}
+
+.footprint.left  { transform: translate(-50%, -50%) rotate(-8deg); object-fit: cover;}
+.footprint.right { transform: translate(-50%, -50%) scaleX(-1) rotate(8deg); object-fit: cover; }
  </style>
 </head>
 <body>
@@ -335,26 +360,50 @@ function spawnStone(){
   s.dataset.y = -80;
   s.dataset.speed = speed;
   s.innerHTML = `<img src="${img}" alt="stone">`;
-  s.onclick = (e)=> collectStone(e.currentTarget);
+  s.addEventListener('pointerdown', (ev)=> collectStone(ev));  // быстро реагирует и на тач, и на клик
   area.appendChild(s);
   G.stones.push(s);
 }
 
-function collectStone(s){
+let FOOT_TOGGLE = 0; 
+
+function collectStone(ev){
+  const s = ev.currentTarget;
   const v = Number(s.dataset.v||1);
+
+  // 1) счёт
   G.score += v;
   document.getElementById('hudScore').textContent = `Score: ${G.score} GTL`;
 
-  // поп-ап очков
+  // 2) координаты клика/тача/пойнтера
+  const x = (ev.touches && ev.touches[0]?.clientX) || ev.clientX;
+  const y = (ev.touches && ev.touches[0]?.clientY) || ev.clientY;
+
+  // 3) стопа: чередуем foot1/foot2 и позу left/right
+  const isRight = (FOOT_TOGGLE++ % 2) === 1;       // true -> правая
+  const footSrc = isRight ? "/static/images/foot2.png" : "/static/images/foot1.png";
+
+  const foot = document.createElement('img');
+  foot.src = footSrc;
+  foot.className = "footprint " + (isRight ? "1" : "2");
+  foot.style.left = x + "px";
+  foot.style.top  = y + "px";
+  (document.getElementById('game') || document.body).appendChild(foot);
+
+  // удаляем отпечаток после анимации/таймера
+  foot.addEventListener('animationend', ()=> foot.remove(), {once:true});
+  setTimeout(()=> foot.remove(), 600);
+
+  // 4) поп-ап очков из точки клика
   const pop = document.createElement('div');
   pop.className = 'score-pop';
   pop.textContent = `+${v}`;
-  const rect = s.getBoundingClientRect();
-  pop.style.left = (rect.left+rect.width/2 - 10)+'px';
-  pop.style.top  = (rect.top - 10)+'px';
-  document.body.appendChild(pop);
+  pop.style.left = (x + 6) + 'px';
+  pop.style.top  = (y - 10) + 'px';
+  (document.getElementById('game') || document.body).appendChild(pop);
   animatePop(pop);
 
+  // 5) убрать камень
   s.remove();
   G.stones = G.stones.filter(x=>x!==s);
 }
