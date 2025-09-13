@@ -16,6 +16,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     # "gtl",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     "gtl.apps.GtlConfig"
 ]
 
@@ -57,7 +59,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
-REST_FRAMEWORK = {"UNAUTHENTICATED_USER": None}
+REST_FRAMEWORK = {"UNAUTHENTICATED_USER": None,     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",}
 
 # Env
 BOT_TOKEN = os.getenv("BOT_TOKEN", "123456:ABC")
@@ -65,3 +67,24 @@ JWT_SECRET = os.getenv("JWT_SECRET", "supersecret")
 JWT_TTL_SECONDS = int(os.getenv("JWT_TTL_SECONDS", "604800"))  # 7 дней
 GAME_FREE_SECONDS = 10
 CLICK_RATE_LIMIT = 20  # кликов в секунду (хардкап)
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "GTL API",
+    "DESCRIPTION": "OpenAPI схема для мини-приложения GTL (Telegram WebApp).",
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,   # саму /schema не встраиваем в UI
+    # JWT авторизация в UI (кнопка Authorize -> Bearer <jwt>)
+    "SECURITY": [{"BearerAuth": []}],
+    "COMPONENT_SPLIT_REQUEST": True,
+    "CONTACT": {"name": "GTL Team"},
+    "LICENSE": {"name": "Proprietary"},
+}
+
+# Описываем схему безопасности для Bearer
+SPECTACULAR_SETTINGS["SECURITY_SCHEMES"] = {
+    "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+    }
+}

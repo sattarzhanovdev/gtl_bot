@@ -13,6 +13,35 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
 
+from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParameter, OpenApiTypes
+
+from .serializers import ProfileSerializer
+
+@extend_schema(
+    tags=["auth"],
+    description="Верифицирует Telegram WebApp initData и возвращает JWT + профиль.",
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {"initData": {"type": "string"}},
+            "required": ["initData"],
+        }
+    },
+    responses={
+        200: OpenApiTypes.OBJECT,  # можно указать сериалайзер
+        400: OpenApiTypes.OBJECT,
+        401: OpenApiTypes.OBJECT,
+    },
+    examples=[
+        OpenApiExample(
+            "Успех",
+            value={"jwt": "eyJhbGciOiJI...", "profile": {"tg_id": 123, "username": "dan", "level": 1, "total_gtl": 0}},
+            response_only=True,
+        )
+    ],
+    auth=[],  # эта ручка без авторизации
+)
+
 # ======= AUTH =======
 @csrf_exempt
 @api_view(["POST"])
@@ -55,6 +84,7 @@ def auth_telegram_webapp(request):
     return Response({"jwt": token, "profile": ProfileSerializer(profile).data})
 
 # ======= PROFILE =======
+
 @api_view(["GET"])
 def me(request):
     if not getattr(request, "user_profile", None):
@@ -62,6 +92,7 @@ def me(request):
     return Response(ProfileSerializer(request.user_profile).data)
 
 # ======= GAME =======
+@extend_schema(tags=["game"], summary="Старт сессии", responses={200: OpenApiTypes.OBJECT})
 @api_view(["POST"])
 def game_start(request):
     if not getattr(request, "user_profile", None):
@@ -172,6 +203,7 @@ SHOP_ITEMS = [
     },
 ]
 
+@extend_schema(tags=["shop"], summary="Список товаров", responses={200: OpenApiTypes.OBJECT})
 @api_view(["GET"])
 def shop_items(request):
     return Response({"items": SHOP_ITEMS})
