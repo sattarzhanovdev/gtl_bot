@@ -1,574 +1,1175 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>GTL — Mini App</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#0b0b11; --bg-2:#1c1c25; --card:#26252f; --txt:#e9ecff; --muted:#9aa0b3;
-      --neon:#ff3bd3; --neon-2:#7a7cff; --ok:#39ff88; --warn:#ffcc00;
-      --radius:22px; --r:16px; --gap:14px; --shadow:0 0 0 2px #ff3bd344, 0 0 22px #ff3bd333;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; color:var(--txt); background:
-        radial-gradient(1200px 900px at 50% -10%, #23214a 0%, var(--bg) 55%) fixed;
-      font-family:"Inter", system-ui, Arial;
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>GTL — Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0b0b11;
+        --bg-2: #1c1c25;
+        --card: #26252f;
+        --txt: #e9ecff;
+        --muted: #9aa0b3;
+        --neon: #ff3bd3;
+        --neon-2: #7a7cff;
+        --ok: #39ff88;
+        --warn: #ffcc00;
+        --radius: 22px;
+        --r: 16px;
+        --gap: 14px;
+        --shadow: 0 0 0 2px #ff3bd344, 0 0 22px #ff3bd333;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        color: var(--txt);
+        background: radial-gradient(
+            1200px 900px at 50% -10%,
+            #23214a 0%,
+            var(--bg) 55%
+          )
+          fixed;
+        font-family: "Inter", system-ui, Arial;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      /* layout */
+      .wrap {
+        min-height: 100dvh;
+        padding-bottom: 92px;
+      }
+      .container {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .space {
+        flex: 1;
+      }
+      .card {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 16px;
+      }
 
-    /* layout */
-    .wrap{min-height:100dvh; padding-bottom:92px}
-    .container{max-width:880px;margin:0 auto;padding:16px}
-    .row{display:flex;align-items:center;gap:10px}
-    .space{flex:1}
-    .card{background:var(--card);border-radius:var(--radius);padding:16px}
+      /* header */
+      .header {
+        padding: 16px;
+      }
+      .username {
+        font-family: "Chakra Petch", monospace;
+        font-weight: 700;
+        font-size: 28px;
+        background: linear-gradient(90deg, #fff, #c8d0ff);
+        -webkit-background-clip: text;
+        color: transparent;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 120px;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .stats .tile {
+        background: var(--bg-2);
+        border-radius: 18px;
+        padding: 16px;
+      }
+      .h-label {
+        color: var(--muted);
+        font-weight: 600;
+        letter-spacing: 0.3px;
+      }
+      .balance {
+        font-family: "Chakra Petch", monospace;
+        font-size: 34px;
+        margin-top: 8px;
+      }
 
-    /* header */
-    .header{padding:16px}
-    .username{font-family:"Chakra Petch", monospace; font-weight:700; font-size:28px;
-      background:linear-gradient(90deg,#fff,#c8d0ff); -webkit-background-clip:text; color:transparent}
-    .stats{display:grid;grid-template-columns:1fr 120px;gap:10px;margin-top:14px}
-    .stats .tile{background:var(--bg-2);border-radius:18px;padding:16px}
-    .h-label{color:var(--muted);font-weight:600;letter-spacing:.3px}
-    .balance{font-family:"Chakra Petch", monospace; font-size:34px;margin-top:8px}
+      /* sections */
+      .section {
+        margin-top: 18px;
+      }
+      .section h2 {
+        margin: 0 0 10px;
+        font-size: 20px;
+      }
 
-    /* sections */
-    .section{margin-top:18px}
-    .section h2{margin:0 0 10px;font-size:20px}
-    .levels .hero{
-      position:relative; border-radius:24px; overflow:hidden;
-      background:linear-gradient(120deg,#281b5c,#fe3bd41a), url('https://images.unsplash.com/photo-1618172193763-39e4d94dfd4b?q=80&w=1600&auto=format&fit=crop') center/cover;
-      height:190px; display:flex; align-items:flex-end; padding:16px;
-      box-shadow:0 6px 18px #00000055;
-    }
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:2px solid #ffffff26;border-radius:14px;background:#ffffff10}
-    .pill .el{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-weight:800;background:
-      radial-gradient(#ff69f3,#4d3cff)}
-    .play{position:absolute;right:14px;bottom:14px;padding:12px 18px;border-radius:16px;background:#000000aa;border:2px solid var(--neon);color:#fff;font-weight:800;box-shadow:var(--shadow)}
-    .play[disabled]{opacity:.5;filter:grayscale(1)}
+      /* -------- LEVEL CARDS (главный экран) -------- */
+      .levels-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .level-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        height: 200px;
+        /* background: #181824 center/cover no-repeat; */
+        background: url('/static/images/level-back.jpg') center/cover no-repeat;
+        box-shadow: 0 10px 26px #00000055;
+        padding: 16px;
+      }
+      .level-card .pill-bar {
+        display: flex;
+        gap: 12px;
+      }
+      .level-card .pill-item {
+        min-width: 64px;
+        height: 54px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        font-family: "Chakra Petch", monospace;
+        font-weight: 800;
+        font-size: 22px;
+        color: #fff;
+        background: #ffffff12;
+        border: 2px solid #ffffff22;
+        box-shadow: inset 0 0 0 2px #ffffff10;
+      }
+      .level-card .title {
+        position: absolute;
+        left: 18px;
+        bottom: 22px;
+        font-weight: 800;
+        font-size: 32px;
+        color: #fff;
+        text-shadow: 0 4px 20px #000a;
+      }
+      .level-card .play {
+        position: absolute;
+        right: 18px;
+        bottom: 16px;
+        padding: 12px 22px;
+        border-radius: 18px;
+        border: 2px solid var(--neon);
+        color: #fff;
+        background: #000000aa;
+        font-weight: 800;
+        box-shadow: 0 0 0 3px #ff3bd355, 0 0 26px #ff3bd333;
+      }
+      .level-card .play:disabled {
+        opacity: 0.6;
+        filter: grayscale(1);
+      }
 
-    /* shop */
-    .shop .group{margin-top:12px}
-    .entry{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--bg-2);
-      padding:12px;border-radius:16px}
-    .entry .left{display:flex;gap:12px;align-items:center}
-    .ico{width:54px;height:54px;border-radius:16px;background:#ffffff10;display:grid;place-items:center;
-      box-shadow:inset 0 0 0 2px #ffffff14}
-    .btn{background:#ffffff14;border:0;border-radius:14px;color:#fff;padding:10px 14px}
-    .btn.primary{background:linear-gradient(90deg,var(--neon),var(--neon-2));font-weight:700;box-shadow:var(--shadow)}
+      /* shop */
+      .shop .group {
+        margin-top: 12px;
+      }
+      .entry {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--bg-2);
+        padding: 10px;
+        border-radius: 16px;
+      }
+      .entry .left {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .ico {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        background: #ffffff10;
+        display: grid;
+        place-items: center;
+        box-shadow: inset 0 0 0 2px #ffffff14;
+      }
+      .btn {
+        background: #ffffff14;
+        border: 0;
+        border-radius: 14px;
+        color: #fff;
+        padding: 10px 14px;
+      }
+      .btn.primary {
+        background: linear-gradient(90deg, var(--neon), var(--neon-2));
+        font-weight: 700;
+        box-shadow: var(--shadow);
+      }
 
-    /* finance/social */
-    .tile.neon{box-shadow:var(--shadow);border:2px solid #ffffff22}
-    .social .entry{border:2px solid var(--neon);box-shadow:var(--shadow)}
+      /* finance/social */
+      .tile.neon {
+        box-shadow: var(--shadow);
+        border: 2px solid #ffffff22;
+      }
+      .social .entry {
+        border: 2px solid var(--neon);
+        box-shadow: var(--shadow);
+      }
 
-    /* periodic table */
-    .ptable .grid{display:grid;grid-template-columns:repeat(18, 1fr);gap:6px}
-    .cell{aspect-ratio:1;border-radius:10px;background:#1b1b2e;display:flex;align-items:center;justify-content:center}
-    .cell.ok{background:#1ed760}
-    .legend{display:flex;gap:8px;margin:10px 0 0;color:#cfd3e6}
-    .legend div{display:flex;gap:6px;align-items:center}
-    .dot{width:10px;height:10px;border-radius:50%}
+      /* periodic table */
+      .ptable .grid {
+        display: grid;
+        grid-template-columns: repeat(18, 1fr);
+        gap: 6px;
+      }
+      .cell {
+        aspect-ratio: 1;
+        border-radius: 10px;
+        background: #1b1b2e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .cell.ok {
+        background: #1ed760;
+      }
+      .legend {
+        display: flex;
+        gap: 8px;
+        margin: 10px 0 0;
+        color: #cfd3e6;
+      }
+      .legend div {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
 
-    /* navbar */
-    .nav{position:fixed;left:0;right:0;bottom:0;background:#0b0b12f2;backdrop-filter:blur(8px);
-      padding:10px 14px; display:grid;grid-template-columns:repeat(5,1fr);gap:10px; border-top:1px solid #ffffff10}
-    .nav button{height:62px;border-radius:18px;background:#ffffff0f;border:2px solid #ffffff14;color:#fff}
-    .nav button.active{outline:0; box-shadow:0 0 0 3px #ff3bd355,0 0 26px #ff3bd333; border-color:var(--neon)}
-    .nav svg{width:26px;height:26px}
+      /* navbar */
+      .nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #0b0b12f2;
+        backdrop-filter: blur(8px);
+        padding: 10px 14px;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        border-top: 1px solid #ffffff10;
+      }
+      .nav button {
+        height: 62px;
+        border-radius: 18px;
+        background: #ffffff0f;
+        border: 2px solid #ffffff14;
+        color: #fff;
+      }
+      .nav button.active {
+        outline: 0;
+        box-shadow: 0 0 0 3px #ff3bd355, 0 0 26px #ff3bd333;
+        border-color: var(--neon);
+      }
+      .nav svg {
+        width: 26px;
+        height: 26px;
+      }
 
-    /* helpers */
-    .hide{display:none}
-    .muted{color:var(--muted)}
+      /* helpers */
+      .hide {
+        display: none;
+      }
+      .muted {
+        color: var(--muted);
+      }
 
-    .game-layer{position:fixed;inset:0;display:none;z-index:50;background:#000;}
-.game-layer.active{display:block}
-.game-bg{
-  position:absolute;inset:0;
-  background:url('/static/images/stones/DGTLfon.mp4') center/cover no-repeat;
-  filter:saturate(1.1) contrast(1.05);
-}
-.game-mask{position:absolute;inset:0;background:url('/static/images/stones/DGTLfon.mp4') center/cover no-repeat;}
-.hud{
-  position:absolute;left:0;right:0;top:8px;display:flex;justify-content:space-between;
-  padding:12px 18px;font-family:"Chakra Petch", monospace;font-weight:800;font-size:30px;color:#e9ecff;mix-blend:screen
-}
-.hud .shadow{text-shadow:0 4px 24px #000, 0 0 0 #000}
-.stones{position:absolute;inset:0;overflow:hidden}
-.stone{
-  position:absolute;width:72px;height:72px;border-radius:18px;display:grid;place-items:center;
-  /* background: radial-gradient(#1d2338,#0d0f1a); box-shadow:0 0 0 2px #00ffd055, 0 0 22px #00ffd033; */
-  user-select:none; -webkit-user-select:none; touch-action:manipulation; cursor:pointer;
-}
-.stone img{
-  width:100%;
-  height:100%;
-  object-fit:contain;   /* чтобы влезала без обрезки */
-  opacity:.95;
-  mix-blend:screen;
-  border-radius:18px;
-}.score-pop{
-  /* position:absolute; color:#fff; font-family:"Chakra Petch"; font-weight:800;
-  text-shadow:0 4px 12px #000; pointer-events:none */
-}
-.game-close{
-  position:absolute;right:12px;top:12px;background:#0008;border:2px solid #ffffff33;color:#fff;
-  border-radius:14px;padding:6px 10px;font-weight:700
-}
- 
- #gameVideo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+      /* -------- GAME OVERLAY -------- */
+      .game-layer {
+        position: fixed;
+        inset: 0;
+        display: none;
+        z-index: 50;
+        background: #000;
+      }
+      .game-layer.active {
+        display: block;
+      }
+      .game-bg {
+        position: absolute;
+        inset: 0;
+        display: none;
+        background-size: cover;
+        background-position: center;
+      }
+      .game-mask {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .hud {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 8px;
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 18px;
+        font-family: "Chakra Petch", monospace;
+        font-weight: 800;
+        font-size: 30px;
+        color: #e9ecff;
+        mix-blend: screen;
+      }
+      .hud .shadow {
+        text-shadow: 0 4px 24px #000, 0 0 0 #000;
+      }
+      .stones {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+      .stone {
+        position: absolute;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        cursor: pointer;
+        filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.65));
+      }
+      .stone img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        opacity: 0.95;
+        mix-blend: screen;
+        border-radius: 18px;
+      }
 
-.footprint {
-  position: absolute;
-  width: 86px;
-  height: 58px;
-  pointer-events: none;
-  transform: translate(-50%, -50%) rotate(0deg);
-  animation: footPop 0.4s ease-out forwards;
-  object-fit: contain;
-  z-index: 1000;              /* поверх видео и камней */
-}
+      .game-close {
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        background: #0008;
+        border: 2px solid #ffffff33;
+        color: #fff;
+        border-radius: 14px;
+        padding: 6px 10px;
+        font-weight: 700;
+      }
+      #gameVideo {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
 
-/* всплывающие очки */
-.score-pop{
-  position:absolute;
-  color:#fff;
-  font-family:"Chakra Petch";
-  font-weight:800;
-  text-shadow:0 4px 12px #000;
-  pointer-events:none;
-  z-index: 1000;
-}
+      /* отпечатки */
+      .footprint {
+        position: absolute;
+        width: 86px;
+        height: 58px;
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        object-fit: contain;
+        z-index: 1000;
+        animation: footPop 0.45s ease-out forwards;
+      }
+      .footprint.left {
+        transform: translate(-50%, -50%) rotate(-8deg);
+      }
+      .footprint.right {
+        transform: translate(-50%, -50%) scaleX(-1) rotate(8deg);
+      }
+      @keyframes footPop {
+        0% {
+          opacity: 0.75;
+          transform: translate(-50%, -50%) scale(0.6);
+        }
+        60% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1.1);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
 
-.footprint.left  { transform: translate(-50%, -50%) rotate(-8deg); object-fit: cover;}
-.footprint.right { transform: translate(-50%, -50%) scaleX(-1) rotate(8deg); object-fit: cover; }
- </style>
-</head>
-<body>
-<div class="wrap">
-  <div class="container">
-    <!-- HEADER -->
-    <div class="header">
-      <div class="username" id="username">username</div>
-      <div class="stats">
-        <div class="tile row">
-          <div class="space">
-            <div class="h-label">Account balance</div>
-            <div class="balance" id="balance">0 GTL</div>
-          </div>
-          <div style="width:1px;background:#ffffff18;align-self:stretch"></div>
-          <div style="width:120px;text-align:center">
-            <div class="h-label">Level</div>
-            <div class="balance" id="level" style="font-size:36px">1</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- LEVELS -->
-    <div class="section levels">
-      <h2>Levels</h2>
-      <div class="hero">
-        <div class="pill">
-          <div class="el">Br</div>
-          <div class="el">Au</div>
-          <div class="el" style="box-shadow:var(--shadow)">C</div>
-          <div class="el">Fe</div>
-        </div>
-        <div style="position:absolute;left:18px;bottom:100px;font-size:24px;font-weight:800">Базовый уровень</div>
-        <button class="play" id="playBtn">Play</button>
-      </div>
-    </div>
-
-    <!-- GAME OVERLAY -->
-<div id="game" class="game-layer">
-  <video autoplay muted loop playsinline id="gameVideo">
-    <source src="/static/images/stones/DGTLfon.mp4" type="video/mp4">
-  </video>
-  <div class="game-bg"></div>
-  <div class="game-mask"></div>
-  <div class="hud">
-    <div id="hudScore" class="shadow">Score: 0 GTL</div>
-    <div id="hudTime"  class="shadow">Time: 10s</div>
-  </div>
-  <div class="stones" id="stones"></div>
-  <button class="game-close" id="gameClose">✕</button>
-</div>
-
-    <!-- SHOP -->
-    <div class="section shop">
-      <h2>Shop</h2>
-      <div class="card group">
-        <div class="h-label" style="margin-bottom:8px">Boost Cards</div>
-        <div id="boostList">
-          <!-- заполнится из /shop/items -->
-        </div>
-      </div>
-
-      <div class="card group">
-        <div class="h-label" style="margin-bottom:8px">Mineral Cards</div>
-        <div id="mineralList">
-          <!-- демо карточки -->
-        </div>
-      </div>
-    </div>
-
-    <!-- FINANCE / SOCIAL -->
-    <div class="section finance">
-      <h2>Join Us</h2>
-      <div class="card social">
-        <div class="entry" style="margin-bottom:10px">
-          <div class="left">
-            <div class="ico">f</div>
-            <div><div style="font-weight:700">Follow GTL on Facebook</div><div class="muted">+500 GTL</div></div>
-          </div>
-          <button class="btn primary">Open</button>
-        </div>
-        <div class="entry" style="margin-bottom:10px">
-          <div class="left">
-            <div class="ico">X</div>
-            <div><div style="font-weight:700">Follow GTL on X</div><div class="muted">+500 GTL</div></div>
-          </div>
-          <button class="btn primary">Open</button>
-        </div>
-        <div class="entry">
-          <div class="left">
-            <div class="ico">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M12 2c-2.8 0-3.2.01-4.3.06-1.1.05-1.9.23-2.6.49a5.2 5.2 0 0 0-1.9 1.24A5.2 5.2 0 0 0 1 5.8c-.26.7-.44 1.5-.49 2.6C.46 9.5.45 9.9.45 12s.01 2.5.06 3.6c.05 1.1.23 1.9.49 2.6.29.8.68 1.4 1.24 1.9.55.55 1.1.95 1.9 1.24.7.26 1.5.44 2.6.49 1.1.05 1.5.06 3.6.06s2.5-.01 3.6-.06c1.1-.05 1.9-.23 2.6-.49a5.2 5.2 0 0 0 1.9-1.24 5.2 5.2 0 0 0 1.24-1.9c.26-.7.44-1.5.49-2.6.05-1.1.06-1.5.06-3.6s-.01-2.5-.06-3.6c-.05-1.1-.23-1.9-.49-2.6a5.2 5.2 0 0 0-1.24-1.9 5.2 5.2 0 0 0-1.9-1.24c-.7-.26-1.5-.44-2.6-.49C15.2 2.01 14.8 2 12 2Z" stroke="#fff" opacity=".25"/><circle cx="12" cy="12" r="5.5" fill="#fff" opacity=".07"/></svg>
+      /* очки-попап */
+      .score-pop {
+        position: absolute;
+        color: #fff;
+        font-family: "Chakra Petch";
+        font-weight: 800;
+        text-shadow: 0 4px 12px #000;
+        pointer-events: none;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+          <div class="username" id="username">username</div>
+          <div class="stats">
+            <div class="tile row">
+              <div class="space">
+                <div class="h-label">Account balance</div>
+                <div class="balance" id="balance">0 GTL</div>
+              </div>
+              <div
+                style="width: 1px; background: #ffffff18; align-self: stretch"
+              ></div>
+              <div style="width: 120px; text-align: center">
+                <div class="h-label">Level</div>
+                <div class="balance" id="level" style="font-size: 36px">1</div>
+              </div>
             </div>
-            <div><div style="font-weight:700">Follow GTL on Instagram</div><div class="muted">+500 GTL</div></div>
           </div>
-          <button class="btn primary">Open</button>
+        </div>
+
+        <!-- LEVELS -->
+        <div class="section levels">
+          <h2>Levels</h2>
+          <div id="levelsList" class="levels-grid"></div>
+        </div>
+
+        <!-- GAME OVERLAY -->
+        <div id="game" class="game-layer">
+          <video autoplay muted loop playsinline id="gameVideo">
+            <source src="/static/images/stones/DGTLfon.mp4" type="video/mp4" />
+          </video>
+          <div class="game-bg" id="gameBg"></div>
+          <div class="game-mask"></div>
+          <div class="hud">
+            <div id="hudScore" class="shadow">Score: 0 GTL</div>
+            <div id="hudTime" class="shadow">Time: 10s</div>
+          </div>
+          <div class="stones" id="stones"></div>
+          <button class="game-close" id="gameClose">✕</button>
+        </div>
+
+        <!-- SHOP -->
+        <div class="section shop">
+          <h2>Shop</h2>
+          <div class="card group">
+            <div class="h-label" style="margin-bottom: 8px">Boost Cards</div>
+            <div id="boostList"></div>
+          </div>
+
+          <div class="card group">
+            <div class="h-label" style="margin-bottom: 8px">Mineral Cards</div>
+            <div id="mineralList"></div>
+          </div>
+        </div>
+
+        <!-- FINANCE / SOCIAL -->
+        <div class="section finance">
+          <h2>Join Us</h2>
+          <div class="card social">
+            <div class="entry" style="margin-bottom: 10px">
+              <div class="left">
+                <div class="ico">f</div>
+                <div>
+                  <div style="font-weight: 700">Follow GTL on Facebook</div>
+                  <div class="muted">+500 GTL</div>
+                </div>
+              </div>
+              <button class="btn primary">Open</button>
+            </div>
+            <div class="entry" style="margin-bottom: 10px">
+              <div class="left">
+                <div class="ico">X</div>
+                <div>
+                  <div style="font-weight: 700">Follow GTL on X</div>
+                  <div class="muted">+500 GTL</div>
+                </div>
+              </div>
+              <button class="btn primary">Open</button>
+            </div>
+            <div class="entry">
+              <div class="left">
+                <div class="ico">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 2c-2.8 0-3.2.01-4.3.06-1.1.05-1.9.23-2.6.49a5.2 5.2 0 0 0-1.9 1.24A5.2 5.2 0 0 0 1 5.8c-.26.7-.44 1.5-.49 2.6C.46 9.5.45 9.9.45 12s.01 2.5.06 3.6c.05 1.1.23 1.9.49 2.6.29.8.68 1.4 1.24 1.9.55.55 1.1.95 1.9 1.24.7.26 1.5.44 2.6.49 1.1.05 1.5.06 3.6.06s2.5-.01 3.6-.06c1.1-.05 1.9-.23 2.6-.49a5.2 5.2 0 0 0 1.9-1.24 5.2 5.2 0 0 0 1.24-1.9c.26-.7.44-1.5.49-2.6.05-1.1.06-1.5.06-3.6s-.01-2.5-.06-3.6c-.05-1.1-.23-1.9-.49-2.6a5.2 5.2 0 0 0-1.24-1.9 5.2 5.2 0 0 0-1.9-1.24c-.7-.26-1.5-.44-2.6-.49C15.2 2.01 14.8 2 12 2Z"
+                      stroke="#fff"
+                      opacity=".25"
+                    />
+                    <circle cx="12" cy="12" r="5.5" fill="#fff" opacity=".07" />
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-weight: 700">Follow GTL on Instagram</div>
+                  <div class="muted">+500 GTL</div>
+                </div>
+              </div>
+              <button class="btn primary">Open</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FRIENDS -->
+        <div class="section friends">
+          <h2>Invite friends</h2>
+          <div class="card tile neon">
+            <div style="font-weight: 700; font-size: 18px; margin-bottom: 8px">
+              Invite a friend!
+            </div>
+            <div class="muted" style="margin-bottom: 12px">
+              Receive <b>+1,000$</b> for every invited friend
+            </div>
+            <button class="btn primary" id="inviteBtn">Invite Friends</button>
+          </div>
+        </div>
+
+        <!-- PERIODIC TABLE -->
+        <div class="section ptable">
+          <h2 style="color: var(--neon)">Периодическая таблица</h2>
+          <div class="muted" id="ptCounter" style="margin-bottom: 10px">
+            Собрано элементов: 0 из 118
+          </div>
+          <div class="card">
+            <div class="grid" id="ptGrid"></div>
+            <div class="legend">
+              <div>
+                <span class="dot" style="background: #1ed760"></span> Собрано
+              </div>
+              <div>
+                <span class="dot" style="background: #2b2e45"></span> Нет
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- FRIENDS -->
-    <div class="section friends">
-      <h2>Invite friends</h2>
-      <div class="card tile neon">
-        <div style="font-weight:700;font-size:18px;margin-bottom:8px">Invite a friend!</div>
-        <div class="muted" style="margin-bottom:12px">Receive <b>+1,000$</b> for every invited friend</div>
-        <button class="btn primary" id="inviteBtn">Invite Friends</button>
-      </div>
+    <!-- NAVBAR -->
+    <div class="nav" id="nav">
+      <button data-tab="home" class="active" aria-label="Home">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M3 9.5 12 3l9 6.5v10a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 19.5V9.5Z"
+            stroke="#fff"
+            opacity=".9"
+          />
+        </svg>
+      </button>
+      <button data-tab="shop" aria-label="Shop">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M3 7h18l-2 12H5L3 7Zm4-4h10l2 4H5л2-4Z"
+            stroke="#fff"
+            opacity=".9"
+          />
+        </svg>
+      </button>
+      <button data-tab="finance" aria-label="Finance">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M4 18h16M6 14v4m4-8v8m4-5v5m4-10v10"
+            stroke="#fff"
+            opacity=".9"
+          />
+        </svg>
+      </button>
+      <button data-tab="friends" aria-label="Friends">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M8.5 12a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm7 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20.5a6 6 0 0 1 12 0M13 20.5a5 5 0 0 1 9-3"
+            stroke="#fff"
+            opacity=".9"
+          />
+        </svg>
+      </button>
+      <button data-tab="ptable" aria-label="Table">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z"
+            stroke="#fff"
+            opacity=".9"
+          />
+        </svg>
+      </button>
     </div>
 
-    <!-- PERIODIC TABLE -->
-    <div class="section ptable">
-      <h2 style="color:var(--neon)">Периодическая таблица</h2>
-      <div class="muted" id="ptCounter" style="margin-bottom:10px">Собрано элементов: 0 из 118</div>
-      <div class="card">
-        <div class="grid" id="ptGrid"></div>
-        <div class="legend">
-          <div><span class="dot" style="background:#1ed760"></span> Собрано</div>
-          <div><span class="dot" style="background:#2b2e45"></span> Нет</div>
+    <script>
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      const BASE = "/api";
+      let JWT = null,
+        PROFILE = null;
+
+      function $(q) {
+        return document.querySelector(q);
+      }
+      function api(path, method = "GET", body) {
+        return fetch(BASE + path, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            ...(JWT ? { Authorization: "Bearer " + JWT } : {}),
+          },
+          body: body ? JSON.stringify(body) : undefined,
+        }).then(async (r) => {
+          if (!r.ok) throw new Error(await r.text());
+          return r.json();
+        });
+      }
+
+      // --- demo auth (без backend) ---
+      async function auth(){
+        try {
+          if (!tg.initData) throw new Error("Запустите через Telegram");
+          const r = await fetch("/api/auth/telegram-webapp", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ initData: tg.initData })
+          });
+          const data = await r.json();
+          if (!r.ok) throw new Error(data.error || r.statusText);
+
+          window.JWT = data.jwt;
+          window.PROFILE = data.profile;
+          localStorage.setItem("jwt", data.jwt);
+          localStorage.setItem("profile", JSON.stringify(data.profile));
+          // дальше обновляйте UI…
+        } catch (e) {
+          alert("Auth error: " + e.message);
+        }
+      }
+
+      /* ---------- LEVEL CONFIG ---------- */
+      const LEVELS = [
+        {
+          id: 1,
+          title: "Базовый уровень",
+          pills: ["Br", "Au", "C", "Fe"],
+          bgImage: "/static/images/bg/level1.jpg",
+          game: {
+            duration: 10,
+            spawnEveryMs: 700,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: "/static/images/background/back1.mp4",
+            bgImage: null,
+          },
+        },
+        {
+          id: 2,
+          title: "Щелочные металлы",
+          pills: ["Li", "Na", "K", "Rb"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 20,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: null,
+            bgImage: "/static/images/background/back2.png",
+          },
+        },
+        {
+          id: 3,
+          title: "Галлогены и благородные газы",
+          pills: ["F", "Cl", "Ne", "Ar"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 24,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: null,
+            bgImage: "/static/images/background/back3.png",
+          },
+        },
+        {
+          id: 4,
+          title: "Переходные металлы",
+          pills: ["Ti", "V", "Cr", "Mn"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 26,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: "/static/images/background/back1.mp4",
+            bgImage: null,
+          },
+        },
+        {
+          id: 5,
+          title: "Лантаноиды",
+          pills: ["La", "Ce", "Nd", "Sm"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 26,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: null,
+            bgImage: "/static/images/background/back2.png",
+          },
+        },
+        {
+          id: 6,
+          title: "Актиноиды",
+          pills: ["Ac", "Th", "U", "Np"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 30,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: null,
+            bgImage: "/static/images/background/back3.png",
+          },
+        },
+        {
+          id: 7,
+          title: "Главная группа",
+          pills: ["B", "Al", "Si", "P"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 32,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: "/static/images/background/back1.mp4",
+            bgImage: null,
+          },
+        },
+        {
+          id: 8,
+          title: "Щелочноземельные металлы",
+          pills: ["Be", "Mg", "Ca", "Sr"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 34,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: null,
+            bgImage: "/static/images/background/back2.png",
+          },
+        },
+        {
+          id: 9,
+          title: "Постпереходные металлы",
+          pills: ["Ga", "In", "Sn", "Pb"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 36,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: null,
+            bgImage: "/static/images/background/back3.png",
+          },
+        },
+        {
+          id: 10,
+          title: "Смешанный уровень",
+          pills: ["Pt", "Hg", "Ni", "H"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 38,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: "/static/images/background/back1.mp4",
+            bgImage: null,
+          },
+        },
+        {
+          id: 11,
+          title: "Редкоземельные элементы",
+          pills: ["Sc", "Y", "Gd", "Tb"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 40,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: null,
+            bgImage: "/static/images/background/back2.png",
+          },
+        },
+        {
+          id: 12,
+          title: "Супер-редкие",
+          pills: ["Ir", "Os", "Rh", "Pd"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 42,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: null,
+            bgImage: "/static/images/background/back3.png",
+          },
+        },
+        {
+          id: 13,
+          title: "Супер-редкие",
+          pills: ["Au", "Pt", "C", "Ti"],
+          bgImage: "/static/images/bg/level2.jpg",
+          game: {
+            duration: 42,
+            spawnEveryMs: 600,
+            stoneImages: [
+              "/static/images/stones/Actinium.png",
+              "/static/images/stones/Aluminum.png",
+              "/static/images/stones/antimony.png",
+              "/static/images/stones/Argon.png",
+            ],
+            bgVideo: "/static/images/background/back1.mp4",
+            bgImage: null,
+          },
+        },
+      ];
+      let CURRENT_LEVEL = 1;
+
+      function renderLevels() {
+        const root = document.getElementById("levelsList");
+        root.innerHTML = LEVELS.map(
+          (l) => `
+      <div class="level-card" style="background-image:url('${l.bgImage}')">
+        <div class="pill-bar">
+          ${l.pills
+            .map(
+              (p, i) =>
+                `<div class="pill-item" style="${
+                  i === 2 ? "box-shadow:var(--shadow)" : ""
+                }">${p}</div>`
+            )
+            .join("")}
         </div>
+        <div class="title" style="margin-bottom: 50px;">${l.title}</div>
+        <button class="play" data-level="${l.id}">Play</button>
       </div>
-    </div>
-  </div>
-</div>
+    `
+        ).join("");
+        root.querySelectorAll(".play").forEach((btn) => {
+          btn.addEventListener("click", () =>
+            startLevel(Number(btn.dataset.level))
+          );
+        });
+      }
 
-<!-- NAVBAR -->
-<div class="nav" id="nav">
-  <button data-tab="home" class="active" aria-label="Home">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M3 9.5 12 3l9 6.5v10a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 19.5V9.5Z" stroke="#fff" opacity=".9"/></svg>
-  </button>
-  <button data-tab="shop" aria-label="Shop">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M3 7h18l-2 12H5L3 7Zm4-4h10l2 4H5l2-4Z" stroke="#fff" opacity=".9"/></svg>
-  </button>
-  <button data-tab="finance" aria-label="Finance">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M4 18h16M6 14v4m4-8v8m4-5v5m4-10v10" stroke="#fff" opacity=".9"/></svg>
-  </button>
-  <button data-tab="friends" aria-label="Friends">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M8.5 12a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm7 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20.5a6 6 0 0 1 12 0M13 20.5a5 5 0 0 1 9-3" stroke="#fff" opacity=".9"/></svg>
-  </button>
-  <button data-tab="ptable" aria-label="Table">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" stroke="#fff" opacity=".9"/></svg>
-  </button>
-</div>
+      /* ---------- GAME CORE ---------- */
+      const GAME_CFG = {
+        duration: 10,
+        spawnEveryMs: 700,
+        fallSpeedMin: 100,
+        fallSpeedMax: 150,
+        stoneImages: [],
+      };
+      let G = {
+        running: false,
+        tLeft: 0,
+        score: 0,
+        lastSpawn: 0,
+        stones: [],
+        raf: 0,
+      };
+      let FOOT_TOGGLE = 0;
 
-<script>
-  const tg = window.Telegram.WebApp; tg.ready();
-  const BASE = "/api";
-  let JWT=null, PROFILE=null;
+      function showGame(onFinish) {
+        const el = document.getElementById("game");
+        el.classList.add("active");
+        G = {
+          running: true,
+          tLeft: GAME_CFG.duration,
+          score: 0,
+          lastSpawn: 0,
+          stones: [],
+          onFinish,
+          raf: 0,
+        };
+        $("#hudScore").textContent = `Score: 0 GTL`;
+        $("#hudTime").textContent = `Time: ${G.tLeft}s`;
+        $("#stones").innerHTML = "";
+        loop(0);
+      }
+      function hideGame() {
+        $("#game").classList.remove("active");
+        cancelAnimationFrame(G.raf);
+        G.running = false;
+      }
+      document.getElementById("gameClose").onclick = () => endGame();
 
-  
-  function $(q){return document.querySelector(q)}
-  function api(path, method='GET', body){
-    return fetch(BASE+path,{
-      method, headers:{'Content-Type':'application/json', ...(JWT?{Authorization:'Bearer '+JWT}:{})},
-      body: body?JSON.stringify(body):undefined
-    }).then(async r=>{ if(!r.ok) throw new Error(await r.text()); return r.json(); });
-  }
+      function startLevel(id) {
+        CURRENT_LEVEL = id;
+        const cfg = LEVELS.find((l) => l.id === id)?.game;
+        if (!cfg) return;
 
-async function auth(){
-  PROFILE = { username: "Demo", level: 3, total_gtl: 777, has_starter_pack: true };
-  paintHeader();
-}
+        GAME_CFG.duration = cfg.duration;
+        GAME_CFG.spawnEveryMs = cfg.spawnEveryMs;
+        GAME_CFG.stoneImages = cfg.stoneImages;
 
-// ---------- GAME ----------
-  const GAME_CFG = {
-    duration: 10,
-    spawnEveryMs: 700,
-    fallSpeedMin: 100,
-    fallSpeedMax: 150,
-    stoneImages: [
-      "/static/images/stones/Actinium.png",
-      "/static/images/stones/Aluminum.png",
-      "/static/images/stones/antimony.png",
-      "/static/images/stones/Argon.png"
-    ]
-  };
+        const video = document.getElementById("gameVideo");
+        const bgDiv = document.getElementById("gameBg");
+        if (cfg.bgVideo) {
+          video.style.display = "block";
+          video.querySelector("source").src = cfg.bgVideo;
+          video.load();
+          bgDiv.style.display = "none";
+          bgDiv.style.backgroundImage = "";
+        } else {
+          video.pause();
+          video.style.display = "none";
+          bgDiv.style.display = "block";
+          bgDiv.style.backgroundImage = `url('${cfg.bgImage}')`;
+        }
+        showGame(endGame);
+      }
 
-let G = {running:false, tLeft:0, score:0, lastSpawn:0, stones:[], raf:0};
+      function spawnStone() {
+        const area = document.getElementById("stones");
+        const w = area.clientWidth,
+          h = area.clientHeight;
 
-function showGame(onFinish){
-  const el = document.getElementById('game');
-  el.classList.add('active');
-  G = {running:true, tLeft:GAME_CFG.duration, score:0, lastSpawn:0, stones:[], onFinish, raf:0};
-  document.getElementById('hudScore').textContent = `Score: 0 GTL`;
-  document.getElementById('hudTime').textContent  = `Time: ${G.tLeft}s`;
-  document.getElementById('stones').innerHTML = '';
-  loop(0);
-}
+        // размер: 0.7..1.4 от базового
+        const base = 46;
+        const muls = [0.7, 0.85, 1.0, 1.2, 1.4];
+        const sizeMul = muls[Math.floor(Math.random() * muls.length)];
+        const sizePx = Math.round(base * sizeMul);
 
-function hideGame(){
-  document.getElementById('game').classList.remove('active');
-  cancelAnimationFrame(G.raf);
-  G.running = false;
-}
+        const x = Math.random() * (w - sizePx - 8) + 4;
 
-document.getElementById('gameClose').onclick = ()=>{ endGame(); };
-function spawnStone(){
-  const area = document.getElementById('stones');
-  const w = area.clientWidth, h = area.clientHeight;
+        // мелкие быстрее, крупные медленнее
+        const baseSpeed =
+          GAME_CFG.fallSpeedMin +
+          Math.random() * (GAME_CFG.fallSpeedMax - GAME_CFG.fallSpeedMin);
+        const speed = Math.max(60, baseSpeed * (1.15 - (sizeMul - 1) * 0.7));
 
-  // базовый размер и множитель (0.7..1.5)
-  const base = 46;                                // базовый px
-  const sizeMul = [0.7, 0.85, 1.0, 1.2, 1.5][Math.floor(Math.random()*5)];
-  const sizePx  = Math.round(base * sizeMul);
+        const baseVal = [1, 2, 5, 10][Math.floor(Math.random() * 4)];
+        const val = Math.max(1, Math.round(baseVal * sizeMul));
 
-  // ограничим X с учётом ширины камня
-  const x = Math.random()*(w - sizePx - 8) + 4;
+        const img =
+          GAME_CFG.stoneImages[
+            Math.floor(Math.random() * GAME_CFG.stoneImages.length)
+          ] || "/static/images/stones/Actinium.png";
 
-  // скорость: мелкие падают быстрее, большие медленнее
-  const baseSpeed = GAME_CFG.fallSpeedMin + Math.random()*(GAME_CFG.fallSpeedMax - GAME_CFG.fallSpeedMin);
-  const speed = Math.max(40, baseSpeed * (1.2 - (sizeMul - 1)*0.8)); // лёгкая коррекция
+        const s = document.createElement("div");
+        s.className = "stone";
+        s.style.width = `${sizePx}px`;
+        s.style.height = `${sizePx}px`;
+        s.style.left = `${x}px`;
+        s.style.top = `-${sizePx + 8}px`;
 
-  // ценность: больше размер → больше GTL
-  const baseVal = [1,2,5,10][Math.floor(Math.random()*4)];
-  const val = Math.max(1, Math.round(baseVal * sizeMul));
+        s.dataset.v = val;
+        s.dataset.y = -sizePx - 8;
+        s.dataset.speed = speed;
 
-  const img = GAME_CFG.stoneImages[Math.floor(Math.random()*GAME_CFG.stoneImages.length)];
+        s.innerHTML = `<img src="${img}" alt="stone">`;
+        s.addEventListener("pointerdown", (ev) => collectStone(ev));
+        area.appendChild(s);
+        G.stones.push(s);
+      }
 
-  const s = document.createElement('div');
-  s.className = 'stone';
-  s.style.width  = `${sizePx}px`;
-  s.style.height = `${sizePx}px`;
-  s.style.left = `${x}px`;
-  s.style.top  = `-${sizePx + 8}px`;
+      function collectStone(ev) {
+        const s = ev.currentTarget;
+        const v = Number(s.dataset.v || 1);
 
-  s.dataset.v = val;
-  s.dataset.y = -sizePx - 8;
-  s.dataset.speed = speed;
+        G.score += v;
+        $("#hudScore").textContent = `Score: ${G.score} GTL`;
 
-  s.innerHTML = `<img src="${img}" alt="stone">`;
-  s.addEventListener('pointerdown', (ev)=> collectStone(ev));
-  area.appendChild(s);
-  G.stones.push(s);
-}
+        const x = (ev.touches && ev.touches[0]?.clientX) || ev.clientX;
+        const y = (ev.touches && ev.touches[0]?.clientY) || ev.clientY;
 
-let FOOT_TOGGLE = 0; 
+        const isRight = FOOT_TOGGLE++ % 2 === 1;
+        const footSrc = isRight
+          ? "/static/images/foot2.png"
+          : "/static/images/foot1.png";
+        const foot = document.createElement("img");
+        foot.src = footSrc;
+        foot.className = "footprint " + (isRight ? "right" : "left");
+        foot.style.left = x + "px";
+        foot.style.top = y + "px";
+        (document.getElementById("game") || document.body).appendChild(foot);
+        foot.addEventListener("animationend", () => foot.remove(), {
+          once: true,
+        });
 
-function collectStone(ev){
-  const s = ev.currentTarget;
-  const v = Number(s.dataset.v||1);
+        const pop = document.createElement("div");
+        pop.className = "score-pop";
+        pop.textContent = `+${v}`;
+        pop.style.left = x + 6 + "px";
+        pop.style.top = y - 10 + "px";
+        (document.getElementById("game") || document.body).appendChild(pop);
+        animatePop(pop);
 
-  // 1) счёт
-  G.score += v;
-  document.getElementById('hudScore').textContent = `Score: ${G.score} GTL`;
+        s.remove();
+        G.stones = G.stones.filter((x) => x !== s);
+      }
 
-  // 2) координаты клика/тача/пойнтера
-  const x = (ev.touches && ev.touches[0]?.clientX) || ev.clientX;
-  const y = (ev.touches && ev.touches[0]?.clientY) || ev.clientY;
+      function animatePop(el) {
+        const start = performance.now();
+        function f(t) {
+          const dt = (t - start) / 650;
+          el.style.transform = `translateY(${-44 * dt}px)`;
+          el.style.opacity = String(1 - dt);
+          if (dt < 1) requestAnimationFrame(f);
+          else el.remove();
+        }
+        requestAnimationFrame(f);
+      }
 
-  // 3) стопа: чередуем foot1/foot2 и позу left/right
-  const isRight = (FOOT_TOGGLE++ % 2) === 1;       // true -> правая
-  const footSrc = isRight ? "/static/images/foot2.png" : "/static/images/foot1.png";
+      function loop(ts) {
+        if (!G.running) return;
+        if (!G.start) G.start = ts;
+        const dt = (ts - (G.prev || ts)) / 1000;
+        G.prev = ts;
 
-  const foot = document.createElement('img');
-  foot.src = footSrc;
-  foot.className = "footprint " + (isRight ? "1" : "2");
-  foot.style.left = x + "px";
-  foot.style.top  = y + "px";
-  (document.getElementById('game') || document.body).appendChild(foot);
+        G.tLeft = Math.max(0, G.tLeft - dt);
+        $("#hudTime").textContent = `Time: ${Math.ceil(G.tLeft)}s`;
+        if (G.tLeft <= 0) {
+          endGame();
+          return;
+        }
 
-  // удаляем отпечаток после анимации/таймера
-  foot.addEventListener('animationend', ()=> foot.remove(), {once:true});
-  setTimeout(()=> foot.remove(), 600);
+        G.lastSpawn += dt * 1000;
+        if (G.lastSpawn >= GAME_CFG.spawnEveryMs) {
+          G.lastSpawn = 0;
+          spawnStone();
+        }
 
-  // 4) поп-ап очков из точки клика
-  const pop = document.createElement('div');
-  pop.className = 'score-pop';
-  pop.textContent = `+${v}`;
-  pop.style.left = (x + 6) + 'px';
-  pop.style.top  = (y - 10) + 'px';
-  (document.getElementById('game') || document.body).appendChild(pop);
-  animatePop(pop);
+        const area = document.getElementById("stones");
+        const h = area.clientHeight;
+        G.stones.forEach((s) => {
+          const y = Number(s.dataset.y) + Number(s.dataset.speed) * dt;
+          s.dataset.y = y;
+          s.style.top = `${y}px`;
+          if (y > h) s.remove();
+        });
+        G.stones = G.stones.filter((s) => s.isConnected);
+        G.raf = requestAnimationFrame(loop);
+      }
 
-  // 5) убрать камень
-  s.remove();
-  G.stones = G.stones.filter(x=>x!==s);
-}
+      async function endGame() {
+        if (!G.running) return;
+        G.running = false;
+        hideGame();
+        const earned = G.score;
 
-function animatePop(el){
-  const start = performance.now();
-  function f(t){
-    const dt = (t-start)/600;
-    el.style.transform = `translateY(${-40*dt}px)`;
-    el.style.opacity = String(1-dt);
-    if(dt<1) requestAnimationFrame(f); else el.remove();
-  }
-  requestAnimationFrame(f);
-}
+        try {
+          if (JWT) {
+            const payload = {
+              total_gtl: earned,
+              minerals: { C: earned % 5, Fe: earned % 3 },
+              clicks_per_sec: 10,
+            };
+            await api("/game/finish/last", "POST", { payload });
+            PROFILE = await api("/me");
+            paintHeader();
+            loadPeriodic();
+          }
+        } catch (_) {}
+        alert(`Insane! You earned ${earned} GTL`);
+      }
 
-function loop(ts){
-  if(!G.running) return;
-  if(!G.start) G.start = ts;
-  const dt = (ts - (G.prev || ts))/1000;
-  G.prev = ts;
+      /* ---------- HEADER / SHOP / TABLE ---------- */
+      function paintHeader() {
+        if (!PROFILE) return;
+        $("#username").textContent =
+          PROFILE.username || PROFILE.display_name || "player";
+        const total = Number(PROFILE.total_gtl || 0);
+        $("#balance").textContent =
+          total.toLocaleString("en-US", { maximumFractionDigits: 0 }) + " GTL";
+        $("#level").textContent = PROFILE.level || 1;
+      }
 
-  // таймер
-  G.tLeft = Math.max(0, G.tLeft - dt);
-  document.getElementById('hudTime').textContent = `Time: ${Math.ceil(G.tLeft)}s`;
-  if (G.tLeft <= 0) { endGame(); return; }
-
-  // спавн
-  G.lastSpawn += dt*1000;
-  if (G.lastSpawn >= GAME_CFG.spawnEveryMs) {
-    G.lastSpawn = 0;
-    spawnStone();
-  }
-
-  // падение
-  const area = document.getElementById('stones');
-  const h = area.clientHeight;
-  G.stones.forEach(s=>{
-    const y = Number(s.dataset.y) + Number(s.dataset.speed)*dt;
-    s.dataset.y = y;
-    s.style.top = `${y}px`;
-    if (y > h) { s.remove(); }
-  });
-  G.stones = G.stones.filter(s=>s.isConnected);
-
-  G.raf = requestAnimationFrame(loop);
-}
-
-async function endGame(){
-  if(!G.running) return;
-  G.running = false;
-  hideGame();
-  const earned = G.score;
-
-  // если есть JWT — отправим на сервер; иначе просто алерт
-  try{
-    if (JWT){
-      // пример payload; подставь свою схему
-      const payload = { total_gtl: earned, minerals: {C:earned%5, Fe:earned%3}, clicks_per_sec: 10 };
-      await api('/game/finish/last','POST',{payload}); // или твой `/game/finish/${SESSION.id}`
-      PROFILE = await api('/me'); paintHeader(); loadPeriodic();
-    }
-  }catch(_){/* молчим в демо */}
-
-  alert(`Insane! You earned ${earned} GTL`);
-}
-    
-  // async function auth(){
-  //   try {
-  //     if (!tg.initData) {
-  //       console.warn("Нет initData → включаем guest-режим");
-  //       JWT = null;
-  //       PROFILE = {
-  //         username: "Guest",
-  //         display_name: "Guest Player",
-  //         level: 1,
-  //         total_gtl: 0,
-  //         has_starter_pack: false
-  //       };
-  //       paintHeader();
-  //       return;
-  //     }
-  //     const r = await fetch("/api/auth/telegram-webapp", {
-  //       method: "POST",
-  //       headers: {"Content-Type":"application/json"},
-  //       body: JSON.stringify({ initData: tg.initData })
-  //     });
-  //     const data = await r.json();
-  //     if (!r.ok) throw new Error(data.error || r.statusText);
-
-  //     // Сохраняем токен и профиль
-  //     JWT = data.jwt;
-  //     PROFILE = data.profile;
-  //     localStorage.setItem("jwt", JWT);
-  //     localStorage.setItem("profile", JSON.stringify(PROFILE));
-
-  //     paintHeader();
-  //   } catch (e) {
-  //     console.error("Auth error:", e);
-  //     alert("Auth error: " + e.message);
-  //   }
-  // }
-
-  function paintHeader(){
-    if (!PROFILE) return;
-    $('#username').textContent = PROFILE.username || PROFILE.display_name || 'player';
-    const total = Number(PROFILE.total_gtl || 0);
-    $('#balance').textContent = total.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}) + ' GTL';
-    $('#level').textContent = PROFILE.level || 1;
-    const playBtn = $('#playBtn');
-    if (playBtn){
-      playBtn.disabled = !PROFILE.has_starter_pack && (PROFILE.level||1)===1;
-      playBtn.textContent = playBtn.disabled ? 'Buy to Play' : 'Play';
-    }
-  }
-
-  /* -------- LEVELS / GAME -------- */
-  let SESSION=null;
-  // $('#playBtn').onclick = async ()=>{
-  //   const s = await api('/game/start','POST'); SESSION=s;
-  //   // в прототипе просто имитируем быструю игру и завершение
-  //   setTimeout(async ()=>{
-  //     const payload = { total_gtl: 137, minerals: {H:3, He:1, C:4}, clicks_per_sec: 12.3 };
-  //     await api(`/game/finish/${SESSION.id}`,'POST',{payload});
-  //     PROFILE = await api('/me'); paintHeader();
-  //     alert(`Insane! You earned ${payload.total_gtl} GTL`);
-  //     loadPeriodic();
-  //   }, Math.min((s.duration_sec||10)*1000, 2500)); // короткая демо-задержка
-  // };
-
-
-  $('#playBtn').onclick = ()=>{
-    showGame(endGame); // запустить игру (10 секунд по умолчанию)
-  };
-  
-
-
-  /* -------- SHOP -------- */
-  
-  async function loadShop(){
-    const {items} = await api('/shop/items');
-    const boost = items.map(i=>`
+      async function loadShop() {
+        // пример — адаптируй под своё API
+        const items = [
+          {
+            key: "pickaxe_1",
+            title: "Кирка 1 (базовая)",
+            price: 10,
+            image: "/static/images/kirka1.png",
+          },
+          {
+            key: "dynamite_1",
+            title: "Динамит 1",
+            price: 50,
+            image: "/static/images/dinamit1.png",
+          },
+        ];
+        const boost = items
+          .map(
+            (i) => `
       <div class="entry" style="margin-bottom:8px">
         <div class="left">
           <img class="ico" src="${i.image}" alt="${i.key}"/>
@@ -577,12 +1178,13 @@ async function endGame(){
             <div class="muted">${i.price} ⟡</div>
           </div>
         </div>
-        <button class="btn primary" onclick="buy('${i.key}')">Buy</button>
-      </div>`).join('');
-    document.getElementById('boostList').innerHTML = boost;
+        <button class="btn primary" onclick="alert('Buy ${i.key}')">Buy</button>
+      </div>`
+          )
+          .join("");
+        document.getElementById("boostList").innerHTML = boost;
 
-    // демо минералы
-    document.getElementById('mineralList').innerHTML = `
+        document.getElementById("mineralList").innerHTML = `
       <div class="entry" style="margin-bottom:8px">
         <div class="left"><img class="ico" src="https://images.unsplash.com/photo-1616512651849-5f3f1f5f41a5?q=80&w=300&auto=format&fit=crop" alt="C"/>
           <div><div style="font-weight:700">Mineral 1</div><div class="muted">Owned: 1</div></div></div>
@@ -593,86 +1195,186 @@ async function endGame(){
           <div><div style="font-weight:700">Mineral 2</div><div class="muted">Owned: 1</div></div></div>
         <button class="btn">View</button>
       </div>`;
-  }
-  async function buy(key){
-    try{
-      const r = await api('/shop/buy','POST',{item_key:key});
-      PROFILE=r.profile; paintHeader();
-    }catch(e){ alert('Not enough balance');}
-  }
-
-  /* -------- REFERRALS -------- */
-  $('#inviteBtn').onclick = async ()=>{
-    const r = await api('/referral');
-    await navigator.clipboard.writeText(r.link);
-    alert('Referral link copied: ' + r.link);
-  };
-
-  /* -------- PERIODIC TABLE -------- */
-  const PT = ["H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn",
-              "Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe",
-              "Cs","Ba","La","Ce","Pr","Nd","Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu",
-              "Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po","At","Rn",
-              "Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No","Lr",
-              "Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"];
-  function paintPT(collected){
-    const grid = $('#ptGrid'); grid.innerHTML='';
-    let gotCount=0;
-    PT.forEach(sym=>{
-      const c = document.createElement('div');
-      c.className='cell'+(collected?.[sym]>0?' ok':'');
-      if(collected?.[sym]>0) gotCount++;
-      c.innerHTML = `<div style="text-align:center;font-weight:800">${sym}</div>`;
-      grid.appendChild(c);
-    });
-    $('#ptCounter').textContent = `Собрано элементов: ${gotCount} из 118`;
-  }
-  async function loadPeriodic(){
-    try{
-      const d = await api('/periodic');
-      paintPT(d.collected||{});
-    }catch(e){ paintPT({}); }
-  }
-
-  /* -------- TAB ROUTER (нижняя навигация) -------- */
-  const sections = {
-    home: ['.levels','.friends'],     // домашний: уровни + друзья-блок
-    shop: ['.shop'],
-    finance: ['.finance'],
-    friends: ['.friends'],
-    ptable: ['.ptable']
-  };
-  function showTab(tab){
-    // switch active
-    document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
-    // hide/show sections
-    document.querySelectorAll('.section').forEach(s=>s.classList.add('hide'));
-    (sections[tab]||[]).forEach(sel=>document.querySelector(sel).classList.remove('hide'));
-  }
-  document.querySelectorAll('.nav button').forEach(btn=>{
-    btn.onclick = ()=> showTab(btn.dataset.tab);
-  });
-
-  /* -------- BOOTSTRAP -------- */
-  (async()=>{
-    // восстановление (на случай перезагрузки)
-    try{
-      const savedJwt = localStorage.getItem('jwt');
-      const savedProfile = localStorage.getItem('profile');
-      if(savedJwt && savedProfile){
-        JWT = savedJwt; PROFILE = JSON.parse(savedProfile);
-        paintHeader();
       }
-    }catch(_){}
 
-    // авторизация через Telegram initData
-    await auth();
+      const PT = [
+        "H",
+        "He",
+        "Li",
+        "Be",
+        "B",
+        "C",
+        "N",
+        "O",
+        "F",
+        "Ne",
+        "Na",
+        "Mg",
+        "Al",
+        "Si",
+        "P",
+        "S",
+        "Cl",
+        "Ar",
+        "K",
+        "Ca",
+        "Sc",
+        "Ti",
+        "V",
+        "Cr",
+        "Mn",
+        "Fe",
+        "Co",
+        "Ni",
+        "Cu",
+        "Zn",
+        "Ga",
+        "Ge",
+        "As",
+        "Se",
+        "Br",
+        "Kr",
+        "Rb",
+        "Sr",
+        "Y",
+        "Zr",
+        "Nb",
+        "Mo",
+        "Tc",
+        "Ru",
+        "Rh",
+        "Pd",
+        "Ag",
+        "Cd",
+        "In",
+        "Sn",
+        "Sb",
+        "Te",
+        "I",
+        "Xe",
+        "Cs",
+        "Ba",
+        "La",
+        "Ce",
+        "Pr",
+        "Nd",
+        "Pm",
+        "Sm",
+        "Eu",
+        "Gd",
+        "Tb",
+        "Dy",
+        "Ho",
+        "Er",
+        "Tm",
+        "Yb",
+        "Lu",
+        "Hf",
+        "Ta",
+        "W",
+        "Re",
+        "Os",
+        "Ir",
+        "Pt",
+        "Au",
+        "Hg",
+        "Tl",
+        "Pb",
+        "Bi",
+        "Po",
+        "At",
+        "Rn",
+        "Fr",
+        "Ra",
+        "Ac",
+        "Th",
+        "Pa",
+        "U",
+        "Np",
+        "Pu",
+        "Am",
+        "Cm",
+        "Bk",
+        "Cf",
+        "Es",
+        "Fm",
+        "Md",
+        "No",
+        "Lr",
+        "Rf",
+        "Db",
+        "Sg",
+        "Bh",
+        "Hs",
+        "Mt",
+        "Ds",
+        "Rg",
+        "Cn",
+        "Nh",
+        "Fl",
+        "Mc",
+        "Lv",
+        "Ts",
+        "Og",
+      ];
+      function paintPT(collected) {
+        const grid = $("#ptGrid");
+        grid.innerHTML = "";
+        let got = 0;
+        PT.forEach((sym) => {
+          const d = document.createElement("div");
+          const ok = collected?.[sym] > 0;
+          if (ok) got++;
+          d.className = "cell" + (ok ? " ok" : "");
+          d.innerHTML = `<div style="text-align:center;font-weight:800">${sym}</div>`;
+          grid.appendChild(d);
+        });
+        $("#ptCounter").textContent = `Собрано элементов: ${got} из 118`;
+      }
+      async function loadPeriodic() {
+        paintPT({});
+      }
 
-    // теперь можно звать API, токен уже есть
-    await loadShop();
-    await loadPeriodic();
-    showTab('home');
-  })();
-</script>
-</body>
+      /* ---------- NAV ---------- */
+      const sections = {
+        home: [".levels", ".friends"],
+        shop: [".shop"],
+        finance: [".finance"],
+        friends: [".friends"],
+        ptable: [".ptable"],
+      };
+      function showTab(tab) {
+        document
+          .querySelectorAll(".nav button")
+          .forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+        document
+          .querySelectorAll(".section")
+          .forEach((s) => s.classList.add("hide"));
+        (sections[tab] || []).forEach((sel) =>
+          document.querySelector(sel).classList.remove("hide")
+        );
+      }
+      document.querySelectorAll(".nav button").forEach((btn) => {
+        btn.onclick = () => showTab(btn.dataset.tab);
+      });
+
+      /* ---------- BOOTSTRAP ---------- */
+      (async () => {
+        try {
+          const savedJwt = localStorage.getItem("jwt");
+          const savedProfile = localStorage.getItem("profile");
+          if (savedJwt && savedProfile) {
+            JWT = savedJwt;
+            PROFILE = JSON.parse(savedProfile);
+            paintHeader();
+          }
+        } catch (_) {}
+        await auth();
+        renderLevels();
+        await loadShop();
+        await loadPeriodic();
+        showTab("home");
+      })();
+    </script>
+  </body>
 </html>
